@@ -18,6 +18,8 @@ var now = new moment;
 // db location
 var url = 'mongodb://localhost:27017/sazerac';
 
+// array to store user Ids
+var userIds = [];
 
 
 // needed functions
@@ -57,7 +59,7 @@ MongoClient.connect(url, function(err, db) {
 
     users.drop();
 
-    for (i = 0; i < 500; i++) {
+    for (i = 0; i < 2; i++) {
         users.insert({
             "firstName": faker.name.firstName(),
             "lastName": faker.name.lastName(),
@@ -69,10 +71,22 @@ MongoClient.connect(url, function(err, db) {
     return db.close();
 });
 
+// getting the user ids in an array
+// a few things. The if/else statment is not working. If seems to be working. else is not
+MongoClient.connect(url, function(err, db) {
+    var users = db.collection('users');
+    users.find().forEach(function(err, doc) {
+        if (err) {
+            console.log(err);
+            return db.close();
+        }
+        console.log('this is the store IDs function');
+        userIds.push('is this thing on?');
+    });
+});
 // Seeding the moments collection
 MongoClient.connect(url, function(err, db) {
     if (err) throw err;
-
 
     var moments = db.collection('moments');
 
@@ -80,19 +94,17 @@ MongoClient.connect(url, function(err, db) {
 
     var users = db.collection('users');
 
-
     for (i = 0; i < 1000; i++) {
 
         var tastes = ['smokey', 'sweet', 'smooth', 'bitter', 'fruity', 'dark', 'light', 'woody', 'bittersweet', 'earthy', 'harsh', 'minty', 'robust', 'tart', 'dry', 'full-bodied', 'sour', 'coffee', 'heavy', 'clean', 'creamy', 'nutty', 'oaky', 'fizzy'],
 
             ingredients = ['Ketel One Vodka', 'Captain Morgan Spiced Rum', "Tito's Handmade Vodka", "Maker's Mark Bourbon", "Remy Martin VSOP Cognac", "Glenlivet 12 Year Old", 'Aperol Orange Aperitif', 'Bulleit Bourbon', 'Bulleit Rye', 'Basil Hayden Bourbon', 'St Germain Elderflower Liqueur', 'Cointreau Liqueur', 'Glenrothes Select Reserve', 'Admiral Nelson Spiced Rum', 'Amaretto Di Saronno', 'Laphroaig 10 Year Old Islay Malt', 'House of Stuart Scotch', 'Amaretto Di Saronno'],
 
-            userIds = [],
+
             ingredientCollection = [],
             tasteDescriptions = [],
             clinkies = [];
 
-        users.find().forEach( function(doc) {userIds.push(doc._id); } );
 
         generateRandomArray(_.random(1, 6), tasteDescriptions, tastes);
         generateRandomArray(_.random(2, 5), ingredientCollection, ingredients);
@@ -113,7 +125,7 @@ MongoClient.connect(url, function(err, db) {
                 "long": generateLong()
             },
             "tastes": tasteDescriptions,
-            "user": _.sample(userIds),
+            "user": _.sample([1, 2, 3, 4, 5, 6]),
             "ingredients": ingredientCollection,
             "picture": faker.image.imageUrl(),
             "glass": _.sample(glasses),
