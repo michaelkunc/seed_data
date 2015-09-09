@@ -22,3 +22,7 @@ coll.aggregate([ { '$match': { 'location.name' : 'CH Distillery'}}, {'$group': {
 
 // aggregate all tastes for the entire database
 coll.aggregate([{'$unwind' : '$tastes'}, {'$group' : { '_id': '$tastes', "count" : {'$sum': 1}}}, {'$sort' :{'count': -1}}, {'$limit' : 10}]);
+
+
+db.posts.aggregate([ {'$unwind' : '$comments'}, {'$group' : {'$author', 'count' :{'$sum' :1}}}, {'$sort': {'count': -1}}, {'$limit': 1}]);
+

@@ -15,6 +15,11 @@ var drinkNames = ['Casino', 'French', 'Gibson', 'Gimlet', 'Gin Fizz', 'Gin buck 
 // generating now
 var now = new moment;
 
+// db location
+var url = 'mongodb://localhost:27017/sazerac';
+
+
+
 // needed functions
 function generateLong() {
     var decimal = _.random(5987133, 9073214),
@@ -43,13 +48,38 @@ function generateRandomArray(times, destinationArray, sourceArray) {
     }
 }
 
-// Seeding the moments collection
-MongoClient.connect('mongodb://localhost:27017/sazerac', function(err, db) {
+// seeding the users collection
+
+MongoClient.connect(url, function(err, db) {
     if (err) throw err;
 
-    var coll = db.collection('moments');
+    var users = db.collection('users');
 
-    coll.drop();
+    users.drop();
+
+    for (i = 0; i < 500; i++) {
+        users.insert({
+            "firstName": faker.name.firstName(),
+            "lastName": faker.name.lastName(),
+            "userName": faker.internet.userName(),
+            "email": faker.internet.email(),
+            "passwordHash": 'password'
+        });
+    }
+    return db.close();
+});
+
+// Seeding the moments collection
+MongoClient.connect(url, function(err, db) {
+    if (err) throw err;
+
+
+    var moments = db.collection('moments');
+
+    moments.drop();
+
+    var users = db.collection('users');
+
 
     for (i = 0; i < 1000; i++) {
 
@@ -57,12 +87,12 @@ MongoClient.connect('mongodb://localhost:27017/sazerac', function(err, db) {
 
             ingredients = ['Ketel One Vodka', 'Captain Morgan Spiced Rum', "Tito's Handmade Vodka", "Maker's Mark Bourbon", "Remy Martin VSOP Cognac", "Glenlivet 12 Year Old", 'Aperol Orange Aperitif', 'Bulleit Bourbon', 'Bulleit Rye', 'Basil Hayden Bourbon', 'St Germain Elderflower Liqueur', 'Cointreau Liqueur', 'Glenrothes Select Reserve', 'Admiral Nelson Spiced Rum', 'Amaretto Di Saronno', 'Laphroaig 10 Year Old Islay Malt', 'House of Stuart Scotch', 'Amaretto Di Saronno'],
 
-            users = _.range(1, 100),
-
-
+            userIds = [],
             ingredientCollection = [],
             tasteDescriptions = [],
             clinkies = [];
+
+        users.find().forEach( function(doc) {userIds.push(doc._id); } );
 
         generateRandomArray(_.random(1, 6), tasteDescriptions, tastes);
         generateRandomArray(_.random(2, 5), ingredientCollection, ingredients);
@@ -70,12 +100,12 @@ MongoClient.connect('mongodb://localhost:27017/sazerac', function(err, db) {
         for (x = 0; x < _.random(0, 10); x++) {
             var userObj = {},
                 key = 'user',
-                value = sampleAndDelete(users);
+                value = sampleAndDelete(userIds);
             userObj[key] = value;
             clinkies.push(userObj);
         }
 
-        coll.insert({
+        moments.insert({
             "cocktail": _.sample(drinkNames),
             "location": {
                 "name": _.sample(names),
@@ -83,14 +113,13 @@ MongoClient.connect('mongodb://localhost:27017/sazerac', function(err, db) {
                 "long": generateLong()
             },
             "tastes": tasteDescriptions,
-            "user": _.sample(users),
+            "user": _.sample(userIds),
             "ingredients": ingredientCollection,
             "picture": faker.image.imageUrl(),
             "glass": _.sample(glasses),
             "date": now.subtract(_.random(1, 30), 'days').format(),
             "notes": faker.lorem.sentence(),
             "drinkAgain": _.random(0, 3),
-            // model clinkies as an object
             "clinkies": clinkies
         });
 
